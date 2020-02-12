@@ -1,0 +1,61 @@
+#Mario Diaz ASIR2 Examen ASO 12/02
+
+
+####1.Crear seis unidades organizativas y crear y meter los grupos y los usuarios en las UO
+
+foreach ($parrafo in gc C:\Users\Administrador\Desktop\clases.txt){
+    if ($parrafo.split(",")[0] -eq "unidadorganizativa"){
+
+        $OU=$parrafo.split(",")[1]
+
+         New-ADOrganizationalUnit -Name $OU -ProtectedFromAccidentalDeletion $false -Path "DC=mario,DC=local"
+
+        #(Se crea la UO para usuarios desabilitados)
+
+        New-ADOrganizationalUnit -Name usuariosdesact -ProtectedFromAccidentalDeletion $false -Path "DC=mario,DC=local"
+       
+
+   }
+   }
+
+   foreach ($parrafo in gc C:\Users\Administrador\Desktop\clases.txt){
+    if ($parrafo.split(",")[0] -eq "user"){
+
+        $usuario=$parrafo.split(",")[1]
+        $password=$parrafo.split(",")[2]
+         $OU=$parrafo.split(",")[3]
+
+ New-ADUser -Name $usuario -Sam $usuario -Path "OU=$OU,DC=mario,DC=local" -AccountPassword (ConvertTo-SecureString $password -AsPlainText -force) -Enable $true
+ 
+
+    }
+}
+
+ foreach ($parrafo in gc C:\Users\Administrador\Desktop\clases.txt){
+    if ($parrafo.split(",")[0] -eq "grupo"){
+
+        $grupo=$parrafo.split(",")[1]
+        $OU=$parrafo.split(",")[2]
+        $miembros=$parrafo.split(",")[3..10]
+
+   New-ADGroup -Name $grupo -GroupScope Global -Path "OU=$OU,DC=mario,DC=local"
+   Add-ADGroupMember $grupo -Members $miembros
+
+    }
+   }
+
+####3.Desactivar cuentas de usuario y moverlo a la UO de los desabilitados(MOVERLO A DESABILITADOS NO ESTA HECHO)
+
+$group=(Get-ADGroup -Filter 'samAccountName -like "*ASIR1*"').DistinguishedName
+
+$varusers=(Get-ADGroupMember -Identity $group).name
+foreach($users333 in $varusers){
+    Disable-LocalUser -Name $users333
+}
+
+
+
+###4.Borrar unidad organizativa
+
+$OU6=(Get-ADOrganizationalUnit -Filter 'Name -like "*ITEL2*"').DistinguishedName
+Remove-ADOrganizationalUnit $OU6 -Recursive
